@@ -7,6 +7,7 @@ import (
 	"tola/models"
 	"tola/utils"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -63,6 +64,11 @@ func Login(c *gin.Context) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Email ou mot de passe incorrect"})
         return
     }
+
+    // Créer une session pour l'utilisateur
+    session := sessions.Default(c)
+    session.Set("userID", user.ID.Hex())
+    session.Save()
 
     c.JSON(http.StatusOK, gin.H{"message": "Connexion réussie", "redirect": "/public/profile.html"})
 }

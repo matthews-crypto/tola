@@ -4,6 +4,8 @@ import (
     "tola/routes"
     "tola/utils"
     "github.com/gin-gonic/gin"
+    "github.com/gin-contrib/sessions"
+    "github.com/gin-contrib/sessions/memstore"
 )
 
 func main() {
@@ -11,6 +13,10 @@ func main() {
     utils.InitCollections() // Initialiser les collections
 
     router := gin.Default()
+
+    // Configurer le middleware de sessions
+    store := memstore.NewStore([]byte("secret"))
+    router.Use(sessions.Sessions("mysession", store))
 
     // Servir les fichiers statiques
     router.Static("/public", "./public")

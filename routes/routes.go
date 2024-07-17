@@ -3,6 +3,7 @@ package routes
 import (
     "github.com/gin-gonic/gin"
     "tola/controllers"
+    "tola/middleware"
 )
 
 func InitializeRoutes(router *gin.Engine) {
@@ -15,4 +16,11 @@ func InitializeRoutes(router *gin.Engine) {
     router.POST("/questions", controllers.AskQuestion)
     router.GET("/questions/:questionId/answers", controllers.ListAnswers)
     router.POST("/questions/:questionId/answers", controllers.AnswerQuestion)
+
+    userGroup := router.Group("/user")
+    userGroup.Use(middleware.AuthRequired) // Middleware pour vérifier l'authentification
+    {
+        userGroup.GET("/info", controllers.GetUserInfo)
+        userGroup.GET("/posts", controllers.GetUserPosts)
+    }
 }
