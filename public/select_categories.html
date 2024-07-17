@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tola - Sélectionner des Catégories</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Sélectionner des Catégories</h1>
+        <form id="categoriesForm">
+            <div id="categoriesList" class="mb-3"></div>
+            <button type="submit" class="btn btn-primary">Valider</button>
+            <div id="categoriesError" class="mt-3 text-danger"></div>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <script>
+        const userId = new URLSearchParams(window.location.search).get('userId');
+
+        async function fetchCategories() {
+            const response = await fetch('/categories');
+            const categories = await response.json();
+            const categoriesList = document.getElementById('categoriesList');
+
+            categories.forEach(category => {
+                const checkbox = document.createElement('div');
+                checkbox.classList.add('form-check');
+                checkbox.innerHTML = `
+                    <input class="form-check-input" type="checkbox" value="${category.name}" id="category${category._id}">
+                    <label class="form-check-label" for="category${category._id}">
+                        ${category.name}
+                    </label>
+                `;
+                categoriesList.appendChild(checkbox);
+            });
+        }
+
+        document.getElementById('categoriesForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const selectedCategories = Array.from(document.querySelectorAll('#categoriesList input:checked')).map(cb => cb.value);
+
+            if (selectedCategories.length < 3) {
+                document.getElementById('categoriesError').textContent = 'Veuillez sélectionner au moins 3 catégories.';
+                return;
+            }
+
+            const response = await fetch(`/users/${userId}/categories`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ categories: selectedCategories })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                window.location.href = '/public/index.html'; // Redirigez vers la page d'accueil ou une autre page après la sélection des catégories
+            } else {
+                document.getElementById('categoriesError').textContent = result.error;
+            }
+        });
+
+        fetchCategories();
+    </script>
+</body>
+</html>
