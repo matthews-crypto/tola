@@ -45,6 +45,11 @@ func main() {
         c.File("./public/answer_question.html")
     })
 
+    // Route pour la page de profil
+    router.GET("/profile", func(c *gin.Context) {
+        c.File("./public/profile.html")
+    })
+
     routes.InitializeRoutes(router)
     router.Run(":8080")
 }
