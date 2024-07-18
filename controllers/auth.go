@@ -72,3 +72,9 @@ func Login(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{"message": "Connexion réussie", "redirect": "/public/profile.html"})
 }
+func Logout(c *gin.Context) {
+    session := sessions.Default(c)
+    session.Clear()
+    session.Save()
+    c.JSON(http.StatusOK, gin.H{"message": "Déconnexion réussie"})
+}

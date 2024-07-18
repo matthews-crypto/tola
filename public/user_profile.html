@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Utilisateur - Tola</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Tola</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Questions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Réponses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Publications</a>
+                    </li>
+                </ul>
+                <form class="d-flex position-relative">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchInput">
+                    <div class="search-results list-group position-absolute" id="searchResults"></div>
+                </form>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            <li><a class="dropdown-item" href="#" id="userEmail"></a></li>
+                            <li><a class="dropdown-item" href="#" id="editProfile">Modifier informations</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout">Déconnexion</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 id="userName">Utilisateur</h1>
+        <h2>Questions</h2>
+        <div id="userQuestions" class="mb-5">
+            <!-- Les questions de l'utilisateur seront affichées ici -->
+        </div>
+        <h2>Publications</h2>
+        <div id="userPublications">
+            <!-- Les publications de l'utilisateur seront affichées ici -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const userId = window.location.pathname.split('/').pop();
+            fetchUserProfile(userId);
+        });
+
+        function fetchUserProfile(userId) {
+            fetch(`/user/profile/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('userName').textContent = data.user.name;
+                    document.getElementById('userEmail').textContent = data.user.email;
+                    displayUserQuestions(data.questions);
+                    displayUserPublications(data.publications);
+                });
+        }
+
+        function displayUserQuestions(questions) {
+            const questionsDiv = document.getElementById('userQuestions');
+            questions.forEach(question => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('card', 'mb-3');
+                questionDiv.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">${question.title}</h5>
+                        <a href="/questions/${question.id}" class="btn btn-primary">Voir la question</a>
+                    </div>
+                `;
+                questionsDiv.appendChild(questionDiv);
+            });
+        }
+
+        function displayUserPublications(publications) {
+            const publicationsDiv = document.getElementById('userPublications');
+            publications.forEach(publication => {
+                const publicationDiv = document.createElement('div');
+                publicationDiv.classList.add('card', 'mb-3');
+                publicationDiv.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">${publication.title}</h5>
+                        <a href="/publications/${publication.id}" class="btn btn-primary">Voir la publication</a>
+                    </div>
+                `;
+                publicationsDiv.appendChild(publicationDiv);
+            });
+        }
+    </script>
+</body>
+</html>

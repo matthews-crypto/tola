@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publications - Tola</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .publication-image {
+            max-width: 300px;
+            max-height: 300px;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: 0 auto 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Tola</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Questions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Réponses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/public/publications.html">Publications</a>
+                    </li>
+                </ul>
+                <form class="d-flex position-relative">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchInput">
+                    <div class="search-results list-group position-absolute" id="searchResults"></div>
+                </form>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            <li><a class="dropdown-item" href="#" id="userEmail"></a></li>
+                            <li><a class="dropdown-item" href="#" id="editProfile">Modifier informations</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout">Déconnexion</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1>Mes Publications</h1>
+        <div class="mb-3">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPublicationModal">Nouvelle Publication</button>
+        </div>
+        <div id="publicationsList">
+            <!-- Les publications seront affichées ici -->
+        </div>
+    </div>
+
+    <!-- Modal pour créer une nouvelle publication -->
+    <div class="modal fade" id="newPublicationModal" tabindex="-1" aria-labelledby="newPublicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newPublicationModalLabel">Nouvelle Publication</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newPublicationForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="publicationTitle" class="form-label">Titre</label>
+                            <input type="text" class="form-control" id="publicationTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="publicationContent" class="form-label">Contenu</label>
+                            <textarea class="form-control" id="publicationContent" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="publicationCategory" class="form-label">Catégorie</label>
+                            <select class="form-select" id="publicationCategory">
+                                <!-- Les catégories seront chargées ici -->
+                            </select>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="otherCategoryCheck">
+                                <label class="form-check-label" for="otherCategoryCheck">
+                                    Autre
+                                </label>
+                            </div>
+                            <input type="text" class="form-control mt-2" id="otherCategoryInput" placeholder="Entrer une nouvelle catégorie" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="publicationImage" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="publicationImage" name="image">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Publier</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            fetchUserPublications();
+            fetchCategories();
+
+            document.getElementById('newPublicationForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createPublication();
+            });
+
+            document.getElementById('otherCategoryCheck').addEventListener('change', function() {
+                document.getElementById('otherCategoryInput').disabled = !this.checked;
+            });
+        });
+
+        function fetchUserPublications() {
+            fetch('/user/publications')
+                .then(response => response.json())
+                .then(publications => {
+                    const publicationsList = document.getElementById('publicationsList');
+                    publicationsList.innerHTML = '';
+                    publications.forEach(publication => {
+                        const createdAt = publication.created_at ? new Date(publication.created_at).toLocaleString() : 'N/A';
+                        const publicationDiv = document.createElement('div');
+                        publicationDiv.classList.add('card', 'mb-3');
+                        publicationDiv.innerHTML = `
+                            <div class="card-body">
+                                <h5 class="card-title">${publication.title || 'N/A'}</h5>
+                                <p class="card-text">${publication.content || 'N/A'}</p>
+                                ${publication.image ? `<img src="/${publication.image}" class="img-fluid mb-3 publication-image" alt="Publication Image">` : ''}
+                                <p class="card-text"><small class="text-muted">Catégorie: ${publication.category || 'N/A'}</small></p>
+                                <p class="card-text"><small class="text-muted">Publié le: ${createdAt}</small></p>
+                                <button class="btn btn-danger" onclick="confirmDeletion('${publication._id}')">Supprimer</button>
+                            </div>
+                        `;
+                        publicationsList.appendChild(publicationDiv);
+                    });
+                });
+        }
+
+        function fetchCategories() {
+            fetch('/categories')
+                .then(response => response.json())
+                .then(categories => {
+                    const categorySelect = document.getElementById('publicationCategory');
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                });
+        }
+
+        function createPublication() {
+            const form = document.getElementById('newPublicationForm');
+            const formData = new FormData(form);
+
+            formData.append('title', document.getElementById('publicationTitle').value);
+            formData.append('content', document.getElementById('publicationContent').value);
+            const category = document.getElementById('otherCategoryCheck').checked ? document.getElementById('otherCategoryInput').value : document.getElementById('publicationCategory').value;
+            formData.append('category', category);
+
+            fetch('/user/publications', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la création de la publication');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.message) {
+                    fetchUserPublications();
+                    form.reset();
+                    document.getElementById('otherCategoryInput').disabled = true;
+                    const modalElement = document.getElementById('newPublicationModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    modalInstance.hide();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        function confirmDeletion(id) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette publication ?")) {
+                deletePublication(id);
+            }
+        }
+
+        function deletePublication(id) {
+            fetch(`/user/publications/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    fetchUserPublications();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

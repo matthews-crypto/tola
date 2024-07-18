@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détail de la Question - Tola</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Tola</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Questions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Réponses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Publications</a>
+                    </li>
+                </ul>
+                <form class="d-flex position-relative">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchInput">
+                    <div class="search-results list-group position-absolute" id="searchResults"></div>
+                </form>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            <li><a class="dropdown-item" href="#" id="userEmail"></a></li>
+                            <li><a class="dropdown-item" href="#" id="editProfile">Modifier informations</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout">Déconnexion</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 id="questionTitle">Question</h1>
+        <p id="questionContent">Contenu de la question</p>
+        <h2>Réponses</h2>
+        <div id="questionAnswers">
+            <!-- Les réponses de la question seront affichées ici -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const questionId = window.location.pathname.split('/').pop();
+            fetchQuestionDetails(questionId);
+        });
+
+        function fetchQuestionDetails(questionId) {
+            fetch(`/questions/${questionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('questionTitle').textContent = data.question.title;
+                    document.getElementById('questionContent').textContent = data.question.content;
+                    displayQuestionAnswers(data.answers);
+                });
+        }
+
+        function displayQuestionAnswers(answers) {
+            const answersDiv = document.getElementById('questionAnswers');
+            answers.forEach(answer => {
+                const answerDiv = document.createElement('div');
+                answerDiv.classList.add('card', 'mb-3');
+                answerDiv.innerHTML = `
+                    <div class="card-body">
+                        <p class="card-text">${answer.content}</p>
+                    </div>
+                `;
+                answersDiv.appendChild(answerDiv);
+            });
+        }
+    </script>
+</body>
+</html>
