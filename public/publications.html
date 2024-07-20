@@ -20,14 +20,14 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Tola</a>
+            <a class="navbar-brand" href="profile.html">Tola</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Questions</a>
+                        <a class="nav-link" href="questions.html">Questions</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Réponses</a>
@@ -215,6 +215,50 @@
                 }
             });
         }
+        document.getElementById('logout').addEventListener('click', () => {
+            fetch('/logout', { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/public/index.html';
+                    }
+                });
+        });
+
+        document.getElementById('editProfile').addEventListener('click', () => {
+            window.location.href = '/public/edit_profile.html';
+        });
+
+        document.getElementById('searchInput').addEventListener('focus', () => {
+            document.getElementById('searchOverlay').style.display = 'block';
+        });
+
+        document.getElementById('searchInput').addEventListener('blur', () => {
+            setTimeout(() => {
+                document.getElementById('searchOverlay').style.display = 'none';
+                document.getElementById('searchResults').innerHTML = '';
+            }, 100);
+        });
+
+        document.getElementById('searchInput').addEventListener('input', () => {
+            const query = document.getElementById('searchInput').value;
+            if (query.length > 0) {
+                fetch(`/search?query=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const searchResults = document.getElementById('searchResults');
+                        searchResults.innerHTML = '';
+                        data.results.forEach(result => {
+                            const item = document.createElement('a');
+                            item.href = result.url;
+                            item.className = 'list-group-item list-group-item-action';
+                            item.textContent = result.title;
+                            searchResults.appendChild(item);
+                        });
+                    });
+            } else {
+                document.getElementById('searchResults').innerHTML = '';
+            }
+        });
     </script>
 </body>
 </html>
