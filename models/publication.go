@@ -13,4 +13,6 @@ type Publication struct {
     Category   string             `bson:"category,omitempty"`
     Image      string             `bson:"image,omitempty"`
     CreatedAt  time.Time          `bson:"created_at"`
+    Likes      int                `bson:"likes"`        // Nombre de likes
+    Dislikes   int                `bson:"dislikes"`     // Nombre de dislikes
 }

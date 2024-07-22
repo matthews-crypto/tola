@@ -17,7 +17,8 @@ func InitializeRoutes(router *gin.Engine) {
 	router.POST("/users/:id/categories", controllers.UpdateUserCategories)
 	router.POST("/questions", controllers.AskQuestion)
 	router.GET("/questions/:id", controllers.GetQuestionDetails)
-	router.GET("/questions/:id/answers", controllers.ListAnswers) // Modification ici
+	router.GET("/questions/:id/answers", controllers.ListAnswers)
+	router.POST("/questions/:id/answers", controllers.CreateAnswer)
 	router.GET("/search", controllers.Search)
 	router.GET("/user/profile/:id", controllers.GetUserProfile)
 
@@ -27,8 +28,10 @@ func InitializeRoutes(router *gin.Engine) {
 		userGroup.GET("/info", controllers.GetUserInfo)
 		userGroup.GET("/posts", controllers.GetUserPosts)
 		userGroup.POST("/update", controllers.UpdateUserProfile)
-		userGroup.POST("/publications", controllers.CreatePublication)       // Nouvelle route pour créer une publication
-		userGroup.GET("/publications", controllers.ListUserPublications)     // Nouvelle route pour lister les publications de l'utilisateur
-		userGroup.DELETE("/publications/:id", controllers.DeletePublication) // Nouvelle route pour supprimer une publication
+		userGroup.POST("/publications", controllers.CreatePublication)              // Nouvelle route pour créer une publication
+		userGroup.GET("/publications", controllers.ListUserPublications)            // Nouvelle route pour lister les publications de l'utilisateur
+		userGroup.DELETE("/publications/:id", controllers.DeletePublication)        // Nouvelle route pour supprimer une publication
+		userGroup.POST("/publications/:id/like", controllers.LikePublication)       // Nouvelle route pour liker une publication
+		userGroup.POST("/publications/:id/dislike", controllers.DislikePublication) // Nouvelle route pour disliker une publication
 	}
 }

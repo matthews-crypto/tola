@@ -59,9 +59,7 @@
             const result = await response.json();
             const errorDiv = document.getElementById('questionError');
             if (response.ok) {
-                errorDiv.textContent = 'Question posée avec succès';
-                errorDiv.classList.remove('text-danger');
-                errorDiv.classList.add('text-success');
+                window.location.href = '/public/questions.html';
             } else {
                 errorDiv.textContent = result.error;
                 errorDiv.classList.remove('text-success');

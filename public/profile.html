@@ -69,7 +69,9 @@
     </nav>
     <div class="container mt-5">
         <h1>Bienvenue, <span id="userName">Utilisateur</span>!</h1>
-
+        <div id="posts">
+            <!-- Les publications seront affichées ici -->
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
@@ -77,7 +79,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             fetchUserInfo();
-            fetchUserPosts();
+            fetchUserCategoryPublications();
         });
 
         function fetchUserInfo() {
@@ -89,22 +91,55 @@
                 });
         }
 
-        function fetchUserPosts() {
-            fetch('/user/posts')
-                .then(response => response.json())
-                .then(posts => {
+        function fetchUserCategoryPublications() {
+            fetch('/user/category_publications')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(publications => {
                     const postsDiv = document.getElementById('posts');
-                    posts.forEach(post => {
+                    postsDiv.innerHTML = '';
+                    publications.forEach(pub => {
+                        const createdAt = new Date(pub.created_at).toLocaleString();
                         const postDiv = document.createElement('div');
                         postDiv.classList.add('card', 'mb-3');
                         postDiv.innerHTML = `
                             <div class="card-body">
-                                <h5 class="card-title">${post.title}</h5>
-                                <p class="card-text">${post.content}</p>
+                                <h5 class="card-title">${pub.title}</h5>
+                                <p class="card-text">${pub.content}</p>
+                                ${pub.image ? `<img src="/${pub.image}" class="img-fluid mb-3 publication-image" alt="Publication Image">` : ''}
+                                <p class="card-text"><small class="text-muted">Catégorie: ${pub.category || 'N/A'}</small></p>
+                                <p class="card-text"><small class="text-muted">Publié le: ${createdAt}</small></p>
+                                <button class="btn btn-outline-primary" onclick="likePublication('${pub._id}')">Like (${pub.likes || 0})</button>
+                                <button class="btn btn-outline-secondary" onclick="dislikePublication('${pub._id}')">Dislike (${pub.dislikes || 0})</button>
                             </div>
                         `;
                         postsDiv.appendChild(postDiv);
                     });
+                })
+                .catch(error => {
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        }
+
+        function likePublication(publicationId) {
+            fetch(`/publications/${publicationId}/like`, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        fetchUserCategoryPublications();
+                    }
+                });
+        }
+
+        function dislikePublication(publicationId) {
+            fetch(`/publications/${publicationId}/dislike`, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        fetchUserCategoryPublications();
+                    }
                 });
         }
 

@@ -32,6 +32,8 @@ func CreatePublication(c *gin.Context) {
 	var publication models.Publication
 	publication.UserID = objID
 	publication.CreatedAt = time.Now()
+	publication.Likes = 0
+	publication.Dislikes = 0
 
 	// Récupérer les champs du formulaire
 	publication.Title = c.PostForm("title")
@@ -117,4 +119,99 @@ func DeletePublication(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Publication supprimée avec succès"})
+}
+
+func LikePublication(c *gin.Context) {
+	publicationID := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(publicationID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de publication invalide"})
+		return
+	}
+
+	_, err = utils.PublicationCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": objID},
+		bson.M{"$inc": bson.M{"likes": 1}},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de l'ajout du like"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Publication likée avec succès"})
+}
+
+func DislikePublication(c *gin.Context) {
+	publicationID := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(publicationID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de publication invalide"})
+		return
+	}
+
+	_, err = utils.PublicationCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": objID},
+		bson.M{"$inc": bson.M{"dislikes": 1}},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de l'ajout du dislike"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Publication dislikée avec succès"})
+}
+
+func ListUserCategoryPublications(c *gin.Context) {
+	session := sessions.Default(c)
+	userID := session.Get("userID")
+	if userID == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non connecté"})
+		return
+	}
+
+	objID, err := primitive.ObjectIDFromHex(userID.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID utilisateur invalide"})
+		return
+	}
+
+	var user struct {
+		Categories []string `bson:"categories"`
+	}
+	err = utils.UserCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Utilisateur non trouvé"})
+		return
+	}
+
+	var publications []bson.M
+	cursor, err := utils.PublicationCollection.Find(
+		context.Background(),
+		bson.M{"category": bson.M{"$in": user.Categories}},
+		options.Find().SetSort(bson.D{{"created_at", -1}}),
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la récupération des publications"})
+		return
+	}
+	if err = cursor.All(context.Background(), &publications); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la lecture des publications"})
+		return
+	}
+
+	for i, pub := range publications {
+		if pub["created_at"] != nil {
+			if t, ok := pub["created_at"].(primitive.DateTime); ok {
+				publications[i]["created_at"] = t.Time()
+			}
+		}
+		// Assurez-vous que _id est une chaîne de caractères
+		if id, ok := pub["_id"].(primitive.ObjectID); ok {
+			publications[i]["_id"] = id.Hex()
+		}
+	}
+
+	c.JSON(http.StatusOK, publications)
 }

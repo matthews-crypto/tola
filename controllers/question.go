@@ -64,25 +64,25 @@ func AnswerQuestion(c *gin.Context) {
 	c.JSON(http.StatusOK, answer)
 }
 
-func ListAnswers(c *gin.Context) {
-	questionID := c.Param("questionId")
-	objID, err := primitive.ObjectIDFromHex(questionID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de question invalide"})
-		return
-	}
+// func ListAnswers(c *gin.Context) {
+// 	questionID := c.Param("questionId")
+// 	objID, err := primitive.ObjectIDFromHex(questionID)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de question invalide"})
+// 		return
+// 	}
 
-	var answers []models.Answer
-	cursor, err := utils.AnswerCollection.Find(context.Background(), bson.M{"questionId": objID})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la récupération des réponses"})
-		return
-	}
+// 	var answers []models.Answer
+// 	cursor, err := utils.AnswerCollection.Find(context.Background(), bson.M{"questionId": objID})
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la récupération des réponses"})
+// 		return
+// 	}
 
-	if err := cursor.All(context.Background(), &answers); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la lecture des réponses"})
-		return
-	}
+// 	if err := cursor.All(context.Background(), &answers); err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la lecture des réponses"})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, answers)
-}
+// 	c.JSON(http.StatusOK, answers)
+// }

@@ -33,7 +33,7 @@
                         <a class="nav-link" href="#">Réponses</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/public/publications.html">Publications</a>
+                        <a class="nav-link" href="publications.html">Publications</a>
                     </li>
                 </ul>
                 <form class="d-flex position-relative">
@@ -143,6 +143,8 @@
                                 <p class="card-text"><small class="text-muted">Catégorie: ${publication.category || 'N/A'}</small></p>
                                 <p class="card-text"><small class="text-muted">Publié le: ${createdAt}</small></p>
                                 <button class="btn btn-danger" onclick="confirmDeletion('${publication._id}')">Supprimer</button>
+                                <button class="btn btn-success" onclick="likePublication('${publication._id}')">Like (${publication.likes || 0})</button>
+                                <button class="btn btn-danger" onclick="dislikePublication('${publication._id}')">Dislike (${publication.dislikes || 0})</button>
                             </div>
                         `;
                         publicationsList.appendChild(publicationDiv);
@@ -167,12 +169,12 @@
         function createPublication() {
             const form = document.getElementById('newPublicationForm');
             const formData = new FormData(form);
-
+        
             formData.append('title', document.getElementById('publicationTitle').value);
             formData.append('content', document.getElementById('publicationContent').value);
             const category = document.getElementById('otherCategoryCheck').checked ? document.getElementById('otherCategoryInput').value : document.getElementById('publicationCategory').value;
             formData.append('category', category);
-
+        
             fetch('/user/publications', {
                 method: 'POST',
                 body: formData
@@ -197,13 +199,13 @@
                 console.error('Erreur:', error);
             });
         }
-
+        
         function confirmDeletion(id) {
             if (confirm("Êtes-vous sûr de vouloir supprimer cette publication ?")) {
                 deletePublication(id);
             }
         }
-
+        
         function deletePublication(id) {
             fetch(`/user/publications/${id}`, {
                 method: 'DELETE'
@@ -215,6 +217,27 @@
                 }
             });
         }
+        
+        function likePublication(id) {
+            fetch(`/publications/${id}/like`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        fetchUserPublications();
+                    }
+                });
+        }
+        
+        function dislikePublication(id) {
+            fetch(`/publications/${id}/dislike`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        fetchUserPublications();
+                    }
+                });
+        }
+        
         document.getElementById('logout').addEventListener('click', () => {
             fetch('/logout', { method: 'POST' })
                 .then(response => {
@@ -223,22 +246,22 @@
                     }
                 });
         });
-
+        
         document.getElementById('editProfile').addEventListener('click', () => {
             window.location.href = '/public/edit_profile.html';
         });
-
+        
         document.getElementById('searchInput').addEventListener('focus', () => {
             document.getElementById('searchOverlay').style.display = 'block';
         });
-
+        
         document.getElementById('searchInput').addEventListener('blur', () => {
             setTimeout(() => {
                 document.getElementById('searchOverlay').style.display = 'none';
                 document.getElementById('searchResults').innerHTML = '';
             }, 100);
         });
-
+        
         document.getElementById('searchInput').addEventListener('input', () => {
             const query = document.getElementById('searchInput').value;
             if (query.length > 0) {
@@ -259,6 +282,7 @@
                 document.getElementById('searchResults').innerHTML = '';
             }
         });
-    </script>
-</body>
-</html>
+        </script>
+        </body>
+        </html>
+        
