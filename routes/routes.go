@@ -21,6 +21,7 @@ func InitializeRoutes(router *gin.Engine) {
 	router.POST("/questions/:id/answers", controllers.CreateAnswer)
 	router.GET("/search", controllers.Search)
 	router.GET("/user/profile/:id", controllers.GetUserProfile)
+	router.GET("/publications", controllers.ListAllPublications) // Nouvelle route pour lister toutes les publications
 
 	userGroup := router.Group("/user")
 	userGroup.Use(middleware.AuthRequired) // Middleware pour vérifier l'authentification

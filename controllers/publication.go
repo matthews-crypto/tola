@@ -215,3 +215,50 @@ func ListUserCategoryPublications(c *gin.Context) {
 
 	c.JSON(http.StatusOK, publications)
 }
+func ListAllPublications(c *gin.Context) {
+	var publications []bson.M
+	cursor, err := utils.PublicationCollection.Find(
+		context.Background(),
+		bson.M{},
+		options.Find().SetSort(bson.D{{"created_at", -1}}),
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la récupération des publications"})
+		return
+	}
+	if err = cursor.All(context.Background(), &publications); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la lecture des publications"})
+		return
+	}
+
+	userMap := make(map[primitive.ObjectID]string)
+	for i, pub := range publications {
+		userID := pub["user_id"].(primitive.ObjectID)
+		if userName, ok := userMap[userID]; ok {
+			publications[i]["user_name"] = userName
+		} else {
+			var pubUser struct {
+				Name string `bson:"name"`
+			}
+			err := utils.UserCollection.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&pubUser)
+			if err != nil {
+				publications[i]["user_name"] = "Utilisateur inconnu"
+			} else {
+				publications[i]["user_name"] = pubUser.Name
+				userMap[userID] = pubUser.Name
+			}
+		}
+
+		if pub["created_at"] != nil {
+			if t, ok := pub["created_at"].(primitive.DateTime); ok {
+				publications[i]["created_at"] = t.Time()
+			}
+		}
+		// Assurez-vous que _id est une chaîne de caractères
+		if id, ok := pub["_id"].(primitive.ObjectID); ok {
+			publications[i]["_id"] = id.Hex()
+		}
+	}
+
+	c.JSON(http.StatusOK, publications)
+}

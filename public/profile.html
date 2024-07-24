@@ -25,6 +25,14 @@
             overflow-y: auto;
             z-index: 1001;
         }
+        .publication-image {
+            max-width: 300px;
+            max-height: 300px;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: 0 auto 10px;
+        }
     </style>
 </head>
 <body>
@@ -39,9 +47,6 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="questions.html">Questions</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Réponses</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="publications.html">Publications</a>
@@ -79,9 +84,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             fetchUserInfo();
-            fetchUserCategoryPublications();
+            fetchAllPublications();
         });
-
+    
         function fetchUserInfo() {
             fetch('/user/info')
                 .then(response => response.json())
@@ -90,9 +95,9 @@
                     document.getElementById('userName').textContent = data.name;
                 });
         }
-
-        function fetchUserCategoryPublications() {
-            fetch('/user/category_publications')
+    
+        function fetchAllPublications() {
+            fetch('/publications')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -111,6 +116,7 @@
                                 <h5 class="card-title">${pub.title}</h5>
                                 <p class="card-text">${pub.content}</p>
                                 ${pub.image ? `<img src="/${pub.image}" class="img-fluid mb-3 publication-image" alt="Publication Image">` : ''}
+                                <p class="card-text"><small class="text-muted">Publié par: ${pub.user_name}</small></p>
                                 <p class="card-text"><small class="text-muted">Catégorie: ${pub.category || 'N/A'}</small></p>
                                 <p class="card-text"><small class="text-muted">Publié le: ${createdAt}</small></p>
                                 <button class="btn btn-outline-primary" onclick="likePublication('${pub._id}')">Like (${pub.likes || 0})</button>
@@ -124,25 +130,25 @@
                     console.error('There has been a problem with your fetch operation:', error);
                 });
         }
-
+    
         function likePublication(publicationId) {
             fetch(`/publications/${publicationId}/like`, { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
-                        fetchUserCategoryPublications();
+                        fetchAllPublications();
                     }
                 });
         }
-
+    
         function dislikePublication(publicationId) {
             fetch(`/publications/${publicationId}/dislike`, { method: 'POST' })
                 .then(response => {
                     if (response.ok) {
-                        fetchUserCategoryPublications();
+                        fetchAllPublications();
                     }
                 });
         }
-
+    
         document.getElementById('logout').addEventListener('click', () => {
             fetch('/logout', { method: 'POST' })
                 .then(response => {
@@ -151,22 +157,22 @@
                     }
                 });
         });
-
+    
         document.getElementById('editProfile').addEventListener('click', () => {
             window.location.href = '/public/edit_profile.html';
         });
-
+    
         document.getElementById('searchInput').addEventListener('focus', () => {
             document.getElementById('searchOverlay').style.display = 'block';
         });
-
+    
         document.getElementById('searchInput').addEventListener('blur', () => {
             setTimeout(() => {
                 document.getElementById('searchOverlay').style.display = 'none';
                 document.getElementById('searchResults').innerHTML = '';
             }, 100);
         });
-
+    
         document.getElementById('searchInput').addEventListener('input', () => {
             const query = document.getElementById('searchInput').value;
             if (query.length > 0) {

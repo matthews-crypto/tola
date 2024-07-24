@@ -30,9 +30,6 @@
                         <a class="nav-link" href="questions.html">Questions</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Réponses</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="publications.html">Publications</a>
                     </li>
                 </ul>
@@ -112,132 +109,65 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
-            fetchUserPublications();
-            fetchCategories();
-
-            document.getElementById('newPublicationForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                createPublication();
-            });
-
-            document.getElementById('otherCategoryCheck').addEventListener('change', function() {
-                document.getElementById('otherCategoryInput').disabled = !this.checked;
-            });
+            fetchUserInfo();
+            fetchAllPublications();
         });
 
-        function fetchUserPublications() {
-            fetch('/user/publications')
+        function fetchUserInfo() {
+            fetch('/user/info')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('userEmail').textContent = data.email;
+                    document.getElementById('userName').textContent = data.name;
+                });
+        }
+
+        function fetchAllPublications() {
+            fetch('/publications')
                 .then(response => response.json())
                 .then(publications => {
-                    const publicationsList = document.getElementById('publicationsList');
-                    publicationsList.innerHTML = '';
-                    publications.forEach(publication => {
-                        const createdAt = publication.created_at ? new Date(publication.created_at).toLocaleString() : 'N/A';
-                        const publicationDiv = document.createElement('div');
-                        publicationDiv.classList.add('card', 'mb-3');
-                        publicationDiv.innerHTML = `
+                    const postsDiv = document.getElementById('posts');
+                    postsDiv.innerHTML = '';
+                    publications.forEach(pub => {
+                        const createdAt = new Date(pub.created_at).toLocaleString();
+                        const userName = pub.user_name || 'Utilisateur inconnu';
+                        const postDiv = document.createElement('div');
+                        postDiv.classList.add('card', 'mb-3');
+                        postDiv.innerHTML = `
                             <div class="card-body">
-                                <h5 class="card-title">${publication.title || 'N/A'}</h5>
-                                <p class="card-text">${publication.content || 'N/A'}</p>
-                                ${publication.image ? `<img src="/${publication.image}" class="img-fluid mb-3 publication-image" alt="Publication Image">` : ''}
-                                <p class="card-text"><small class="text-muted">Catégorie: ${publication.category || 'N/A'}</small></p>
+                                <h5 class="card-title">${pub.title}</h5>
+                                <p class="card-text"><strong>${userName === document.getElementById('userName').textContent ? 'Vous' : userName}</strong></p>
+                                <p class="card-text">${pub.content}</p>
+                                ${pub.image ? `<img src="/${pub.image}" class="img-fluid mb-3 publication-image" alt="Publication Image">` : ''}
+                                <p class="card-text"><small class="text-muted">Catégorie: ${pub.category || 'N/A'}</small></p>
                                 <p class="card-text"><small class="text-muted">Publié le: ${createdAt}</small></p>
-                                <button class="btn btn-danger" onclick="confirmDeletion('${publication._id}')">Supprimer</button>
-                                <button class="btn btn-success" onclick="likePublication('${publication._id}')">Like (${publication.likes || 0})</button>
-                                <button class="btn btn-danger" onclick="dislikePublication('${publication._id}')">Dislike (${publication.dislikes || 0})</button>
+                                <button class="btn btn-outline-primary" onclick="likePublication('${pub._id}')">Like (${pub.likes || 0})</button>
+                                <button class="btn btn-outline-secondary" onclick="dislikePublication('${pub._id}')">Dislike (${pub.dislikes || 0})</button>
                             </div>
                         `;
-                        publicationsList.appendChild(publicationDiv);
+                        postsDiv.appendChild(postDiv);
                     });
                 });
         }
 
-        function fetchCategories() {
-            fetch('/categories')
-                .then(response => response.json())
-                .then(categories => {
-                    const categorySelect = document.getElementById('publicationCategory');
-                    categories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.name;
-                        option.textContent = category.name;
-                        categorySelect.appendChild(option);
-                    });
+        function likePublication(publicationId) {
+            fetch(`/user/publications/${publicationId}/like`, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        fetchAllPublications();
+                    }
                 });
         }
 
-        function createPublication() {
-            const form = document.getElementById('newPublicationForm');
-            const formData = new FormData(form);
-        
-            formData.append('title', document.getElementById('publicationTitle').value);
-            formData.append('content', document.getElementById('publicationContent').value);
-            const category = document.getElementById('otherCategoryCheck').checked ? document.getElementById('otherCategoryInput').value : document.getElementById('publicationCategory').value;
-            formData.append('category', category);
-        
-            fetch('/user/publications', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la création de la publication');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.message) {
-                    fetchUserPublications();
-                    form.reset();
-                    document.getElementById('otherCategoryInput').disabled = true;
-                    const modalElement = document.getElementById('newPublicationModal');
-                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                    modalInstance.hide();
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-            });
-        }
-        
-        function confirmDeletion(id) {
-            if (confirm("Êtes-vous sûr de vouloir supprimer cette publication ?")) {
-                deletePublication(id);
-            }
-        }
-        
-        function deletePublication(id) {
-            fetch(`/user/publications/${id}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    fetchUserPublications();
-                }
-            });
-        }
-        
-        function likePublication(id) {
-            fetch(`/publications/${id}/like`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        fetchUserPublications();
+        function dislikePublication(publicationId) {
+            fetch(`/user/publications/${publicationId}/dislike`, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        fetchAllPublications();
                     }
                 });
         }
-        
-        function dislikePublication(id) {
-            fetch(`/publications/${id}/dislike`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        fetchUserPublications();
-                    }
-                });
-        }
-        
+
         document.getElementById('logout').addEventListener('click', () => {
             fetch('/logout', { method: 'POST' })
                 .then(response => {
@@ -246,22 +176,22 @@
                     }
                 });
         });
-        
+
         document.getElementById('editProfile').addEventListener('click', () => {
             window.location.href = '/public/edit_profile.html';
         });
-        
+
         document.getElementById('searchInput').addEventListener('focus', () => {
             document.getElementById('searchOverlay').style.display = 'block';
         });
-        
+
         document.getElementById('searchInput').addEventListener('blur', () => {
             setTimeout(() => {
                 document.getElementById('searchOverlay').style.display = 'none';
                 document.getElementById('searchResults').innerHTML = '';
             }, 100);
         });
-        
+
         document.getElementById('searchInput').addEventListener('input', () => {
             const query = document.getElementById('searchInput').value;
             if (query.length > 0) {
@@ -282,7 +212,7 @@
                 document.getElementById('searchResults').innerHTML = '';
             }
         });
-        </script>
+    </script>
         </body>
         </html>
         
